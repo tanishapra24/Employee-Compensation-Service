@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR Compensation & Analytics Portal | Azure Functions Backend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(22, 30, 49, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(30, 41, 67, 0.85);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #06b6d4;
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.2);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, #171d33 0%, var(--bg) 90%);
+      color: var(--text-main);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -150px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .logo-icon svg { width: 24px; height: 24px; fill: white; }
+
+    .logo-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .tab-btn.active {
+      color: white;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Panels & Tables */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(14px);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .panel-title h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .panel-title p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .filter-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    select, input {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--primary);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    thead {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    th {
+      padding: 12px 16px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .badge-null {
+      background: rgba(148, 163, 184, 0.12);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .badge-bonus {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-dept {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-rank {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .rank-1 { background: gold; color: #1e1b4b; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+    .rank-2 { background: silver; color: #1e1b4b; }
+    .rank-3 { background: #cd7f32; color: #1e1b4b; }
+    .rank-default { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+
+    /* Showdown Card for B.6 */
+    .showdown-card {
+      background: linear-gradient(135deg, rgba(30, 41, 67, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .showdown-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .showdown-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .showdown-vs {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(6, 182, 212, 0.1);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #131c31;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 460px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-box h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      color: white;
+      font-size: 0.875rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      z-index: 200;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Toggle Switch */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Progress bar */
+    .progress-bar-bg {
+      background: rgba(255,255,255,0.08);
+      height: 6px;
+      border-radius: 3px;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .showdown-grid { grid-template-columns: 1fr; }
+      .showdown-vs { margin: 0 auto; }
+      header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .header-actions { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="logo-group">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>HR Compensation Portal</h1>
+        <p>Azure Functions v4 Service & Relational SQL Backend</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        API Online (Port 7071)
+      </div>
+
+      <div class="toggle-wrap">
+        <span>Part C: 5% Bonus Policy</span>
+        <label class="switch">
+          <input type="checkbox" id="defaultBonusToggle" onchange="toggleDefaultBonus()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Employee
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Company Bonus</div>
+      <div class="kpi-value" id="kpiTotalBonus">$0</div>
+      <div class="kpi-sub">Across all employees (Part B.1)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Employees</div>
+      <div class="kpi-value" id="kpiTotalStaff">0</div>
+      <div class="kpi-sub" id="kpiBonusBreakdown">0 with bonus / 0 without</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Highest Base Salary</div>
+      <div class="kpi-value" id="kpiHighestSalary">$0</div>
+      <div class="kpi-sub" id="kpiHighestSalaryPerson">Evaluating...</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Bonus Surplus Depts</div>
+      <div class="kpi-value" id="kpiHighBonusDept">None</div>
+      <div class="kpi-sub">Total Bonus > Avg Salary (Part B.4)</div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('employeesTab', this)">
+      👥 Employees Directory (Part A)
+    </button>
+    <button class="tab-btn" onclick="switchTab('reportsTab', this)">
+      📊 Compensation Reports (Part B)
+    </button>
+    <button class="tab-btn" onclick="switchTab('architectureTab', this)">
+      ⚙️ Architecture & SQL Design
+    </button>
+  </div>
+
+  <!-- TAB 1: Employees Directory (Part A) -->
+  <div id="employeesTab" class="tab-content active">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>Staff Records & Bonus Management</h2>
+          <p>Full CRUD data access through Azure Functions layer</p>
+        </div>
+        <div class="filter-controls">
+          <label style="font-size:0.8rem; color:var(--text-muted)">Department:</label>
+          <select id="departmentFilter" onchange="loadEmployees()">
+            <option value="">All Departments</option>
+            <option value="1">Engineering</option>
+            <option value="2">Sales</option>
+            <option value="3">Human Resources</option>
+            <option value="4">Product</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="loadEmployees()">Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Employee Name</th>
+              <th>Department</th>
+              <th>Base Salary</th>
+              <th>Awarded Bonus</th>
+              <th>Total Comp</th>
+              <th>Hire Date</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="employeesTableBody">
+            <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted)">Loading employee records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Compensation Reports (Part B) -->
+  <div id="reportsTab" class="tab-content">
+    <!-- Part B.6: Highest Salary vs Highest Total Comp Showdown -->
+    <div class="showdown-card">
+      <div class="panel-title">
+        <h2>Executive Compensation Showdown (Part B.6)</h2>
+        <p id="b6Explanation">Analyzing salary vs total compensation...</p>
+      </div>
+
+      <div class="showdown-grid">
+        <div class="showdown-item">
+          <div class="kpi-label" style="color:var(--accent)">Highest Base Salary</div>
+          <div style="font-size:1.3rem; font-weight:700" id="b6SalaryName">-</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#38bdf8; margin:6px 0" id="b6SalaryAmount">$0</div>
+          <div style="font-size:0.8rem; color:var(--text-muted)" id="b6SalaryBonus">Bonus: $0</div>
+        </div>
+
+        <div class="showdown-vs">VS</div>
+
+        <div class="showdown-item">
+          <div class="kpi-label" style="color:var(--success)">Highest Total Compensation</div>
+          <div style="font-size:1.3rem; font-weight:700" id="b6CompName">-</div>
+          <div style="font-size:1.6rem; font-weight:800; color:#34d399; margin:6px 0" id="b6CompAmount">$0</div>
+          <div style="font-size:0.8rem; color:var(--text-muted)" id="b6CompBreakdown">Salary: $0 + Bonus: $0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Part B.5: Leaderboard Ranked by Bonus (NULL ranked last) -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <h2>Bonus Ranking Leaderboard (Part B.5)</h2>
+          <p>Employees ranked by bonus descending — staff without a bonus ranked last rather than excluded</p>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px">Rank</th>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Base Salary</th>
+              <th>Bonus Awarded</th>
+            </tr>
+          </thead>
+          <tbody id="rankedTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Part B.3 & B.4 Two-Column Grid -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:20px">
+      <!-- Part B.3: Bonus Percentage of Salary -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2>Bonus as % of Salary (Part B.3)</h2>
+            <p>Calculated and rounded to 2 decimal places</p>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Salary</th>
+                <th>Bonus</th>
+                <th>Bonus %</th>
+              </tr>
+            </thead>
+            <tbody id="percentagesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Part B.2: Employees With Zero Bonus -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2>Employees Without Bonus (Part B.2)</h2>
+            <p>Staff members with Bonus = NULL</p>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Salary</th>
+                <th>Hire Date</th>
+              </tr>
+            </thead>
+            <tbody id="noBonusTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Architecture & Design Decisions -->
+  <div id="architectureTab" class="tab-content">
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:16px">
+        <h2>Production Readiness & System Design Decisions</h2>
+        <p>Implementation notes for interview evaluation</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:20px">
+        <div style="background:rgba(15,23,42,0.6); padding:20px; border-radius:var(--radius-md); border:1px solid var(--card-border)">
+          <h3 style="color:#818cf8; font-size:1rem; margin-bottom:8px">1. NULL Bonus Handling</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5">
+            SQL operations with NULL naturally yield NULL. All aggregation queries use <code>COALESCE(SUM(Bonus), 0)</code> to guarantee mathematical correctness. In rankings, <code>ORDER BY CASE WHEN Bonus IS NULL THEN 1 ELSE 0 END ASC, Bonus DESC</code> guarantees NULL values are placed last deterministically.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.6); padding:20px; border-radius:var(--radius-md); border:1px solid var(--card-border)">
+          <h3 style="color:#38bdf8; font-size:1rem; margin-bottom:8px">2. Secrets & Configuration</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5">
+            Zero database credentials or paths are hardcoded. Database configuration is dynamically loaded from <code>process.env.DATABASE_PATH</code> or Azure App Settings.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.6); padding:20px; border-radius:var(--radius-md); border:1px solid var(--card-border)">
+          <h3 style="color:#34d399; font-size:1rem; margin-bottom:8px">3. 5% Default Bonus: Read-Time Rationale</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5">
+            We chose <strong>read-time projection</strong> over write-time table mutation. Writing to the DB destroys auditability by permanently erasing whether a bonus was genuine or a default fallback. Read-time calculation also accommodates policy updates with zero DB migrations.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create Employee -->
+<div id="createModal" class="modal-backdrop">
+  <div class="modal-box">
+    <h3>Add New Employee</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px">Create record via Azure Functions POST /api/employees</p>
+    
+    <div class="form-group">
+      <label>First Name *</label>
+      <input type="text" id="createFirstName" placeholder="e.g. Maya" required>
+    </div>
+    <div class="form-group">
+      <label>Last Name *</label>
+      <input type="text" id="createLastName" placeholder="e.g. Lin" required>
+    </div>
+    <div class="form-group">
+      <label>Department *</label>
+      <select id="createDept">
+        <option value="1">Engineering</option>
+        <option value="2">Sales</option>
+        <option value="3">Human Resources</option>
+        <option value="4">Product</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Base Salary ($) *</label>
+      <input type="number" id="createSalary" placeholder="e.g. 110000" min="1" step="1000" required>
+    </div>
+    <div class="form-group">
+      <label>Annual Bonus ($) (Optional — Leave blank for NULL)</label>
+      <input type="number" id="createBonus" placeholder="Leave empty for NULL" min="0" step="500">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCreateEmployee()">Create Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Bonus -->
+<div id="editModal" class="modal-backdrop">
+  <div class="modal-box">
+    <h3>Update Employee Bonus</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px" id="editEmployeeSubtitle">Updating record</p>
+    <input type="hidden" id="editEmployeeId">
+    
+    <div class="form-group">
+      <label>Bonus Amount ($)</label>
+      <input type="number" id="editBonusAmount" placeholder="Enter amount or leave empty to set to NULL" min="0">
+      <small style="color:var(--text-dim); font-size:0.75rem; margin-top:4px; display:block">Leaving this blank will reset Bonus to NULL.</small>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUpdateBonus()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">Notification</div>
+
+<script>
+  let applyDefaultBonus = false;
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function toggleDefaultBonus() {
+    applyDefaultBonus = document.getElementById('defaultBonusToggle').checked;
+    showToast(applyDefaultBonus ? '5% default bonus projection enabled (read-time)' : 'Standard awarded bonuses only');
+    loadEmployees();
+    loadReports();
+  }
+
+  // Part A: Load Employees
+  async function loadEmployees() {
+    const deptId = document.getElementById('departmentFilter').value;
+    let url = '/api/employees';
+    const params = [];
+    if (deptId) params.push(`departmentId=${deptId}`);
+    if (applyDefaultBonus) params.push('applyDefaultBonus=true');
+    if (params.length > 0) url += `?${params.join('&')}`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const tbody = document.getElementById('employeesTableBody');
+
+      if (!data.data || data.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted)">No employees found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.data.map(emp => {
+        let bonusDisplay = '';
+        if (emp.Bonus === null || emp.Bonus === undefined) {
+          if (emp.IsDefaultBonusApplied) {
+            bonusDisplay = `<span class="badge badge-bonus">$${emp.EffectiveBonus.toLocaleString()} <small>(5% Default)</small></span>`;
+          } else {
+            bonusDisplay = `<span class="badge badge-null">No Bonus (NULL)</span>`;
+          }
+        } else {
+          bonusDisplay = `<span class="badge badge-bonus">$${emp.Bonus.toLocaleString()}</span>`;
+        }
+
+        const totalComp = emp.Salary + (emp.EffectiveBonus !== undefined ? emp.EffectiveBonus : (emp.Bonus || 0));
+
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); color:var(--text-muted)">#${emp.EmployeeID}</td>
+            <td style="font-weight:600">${emp.FirstName} ${emp.LastName}</td>
+            <td><span class="badge badge-dept">${emp.DepartmentName || 'Dept ' + emp.DepartmentID}</span></td>
+            <td>$${emp.Salary.toLocaleString()}</td>
+            <td>${bonusDisplay}</td>
+            <td style="font-weight:700">$${totalComp.toLocaleString()}</td>
+            <td style="color:var(--text-muted); font-size:0.8rem">${emp.HireDate || '—'}</td>
+            <td style="text-align:right">
+              <button class="btn btn-secondary btn-sm" onclick="openEditModal(${emp.EmployeeID}, '${emp.FirstName} ${emp.LastName}', ${emp.Bonus})">Edit Bonus</button>
+              <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="deleteEmployee(${emp.EmployeeID}, '${emp.FirstName} ${emp.LastName}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error(err);
+      showToast('Error loading employees');
+    }
+  }
+
+  // Part B: Load Reports & KPIs
+  async function loadReports() {
+    try {
+      // 1. Total Bonus
+      const totalRes = await fetch('/api/reports/total-bonus');
+      const totalData = await totalRes.json();
+      if (totalData.success) {
+        document.getElementById('kpiTotalBonus').textContent = '$' + totalData.data.totalBonusPaid.toLocaleString();
+        document.getElementById('kpiTotalStaff').textContent = totalData.data.totalEmployees;
+        document.getElementById('kpiBonusBreakdown').textContent = `${totalData.data.employeesWithBonus} with bonus / ${totalData.data.employeesWithoutBonus} without`;
+      }
+
+      // 2. High Bonus Depts
+      const deptRes = await fetch('/api/reports/departments-high-bonus');
+      const deptData = await deptRes.json();
+      if (deptData.success && deptData.data.length > 0) {
+        const topDept = deptData.data[0];
+        document.getElementById('kpiHighBonusDept').textContent = topDept.DepartmentName;
+      }
+
+      // 3. Highest Compensation (Part B.6)
+      const compRes = await fetch('/api/reports/highest-compensation');
+      const compData = await compRes.json();
+      if (compData.success) {
+        const d = compData.data;
+        document.getElementById('kpiHighestSalary').textContent = '$' + d.highestBaseSalary.Salary.toLocaleString();
+        document.getElementById('kpiHighestSalaryPerson').textContent = `${d.highestBaseSalary.FirstName} ${d.highestBaseSalary.LastName}`;
+
+        document.getElementById('b6Explanation').textContent = d.explanation;
+        document.getElementById('b6SalaryName').textContent = `${d.highestBaseSalary.FirstName} ${d.highestBaseSalary.LastName}`;
+        document.getElementById('b6SalaryAmount').textContent = '$' + d.highestBaseSalary.Salary.toLocaleString();
+        document.getElementById('b6SalaryBonus').textContent = `Bonus: ${d.highestBaseSalary.Bonus ? '$' + d.highestBaseSalary.Bonus.toLocaleString() : 'NULL'}`;
+
+        document.getElementById('b6CompName').textContent = `${d.highestTotalCompensation.FirstName} ${d.highestTotalCompensation.LastName}`;
+        document.getElementById('b6CompAmount').textContent = '$' + d.highestTotalCompensation.TotalCompensation.toLocaleString();
+        document.getElementById('b6CompBreakdown').textContent = `Salary: $${d.highestTotalCompensation.Salary.toLocaleString()} + Bonus: $${(d.highestTotalCompensation.Bonus || 0).toLocaleString()}`;
+      }
+
+      // 4. Ranked by Bonus (Part B.5)
+      const rankRes = await fetch('/api/reports/ranked-by-bonus');
+      const rankData = await rankRes.json();
+      if (rankData.success) {
+        const tbody = document.getElementById('rankedTableBody');
+        tbody.innerHTML = rankData.data.map(emp => {
+          let rankClass = 'rank-default';
+          if (emp.BonusRank === 1) rankClass = 'rank-1';
+          else if (emp.BonusRank === 2) rankClass = 'rank-2';
+          else if (emp.BonusRank === 3) rankClass = 'rank-3';
+
+          const bonusLabel = emp.Bonus !== null ? `$${emp.Bonus.toLocaleString()}` : '<span class="badge badge-null">No Bonus (Ranked Last)</span>';
+
+          return `
+            <tr>
+              <td><span class="badge-rank ${rankClass}">${emp.BonusRank}</span></td>
+              <td style="font-weight:600">${emp.FirstName} ${emp.LastName}</td>
+              <td><span class="badge badge-dept">${emp.DepartmentName}</span></td>
+              <td>$${emp.Salary.toLocaleString()}</td>
+              <td style="font-weight:700">${bonusLabel}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 5. Bonus Percentages (Part B.3)
+      const pctRes = await fetch('/api/reports/bonus-percentage');
+      const pctData = await pctRes.json();
+      if (pctData.success) {
+        const tbody = document.getElementById('percentagesTableBody');
+        tbody.innerHTML = pctData.data.map(item => `
+          <tr>
+            <td style="font-weight:600">${item.FirstName} ${item.LastName}</td>
+            <td>$${item.Salary.toLocaleString()}</td>
+            <td>$${item.Bonus.toLocaleString()}</td>
+            <td>
+              <div style="font-weight:700; color:#38bdf8">${item.BonusPercentage}%</div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${Math.min(item.BonusPercentage, 100)}%"></div>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // 6. No Bonus Employees (Part B.2)
+      const noBonusRes = await fetch('/api/reports/no-bonus-employees');
+      const noBonusData = await noBonusRes.json();
+      if (noBonusData.success) {
+        const tbody = document.getElementById('noBonusTableBody');
+        tbody.innerHTML = noBonusData.data.map(emp => `
+          <tr>
+            <td style="font-weight:600">${emp.FirstName} ${emp.LastName}</td>
+            <td><span class="badge badge-dept">${emp.DepartmentName}</span></td>
+            <td>$${emp.Salary.toLocaleString()}</td>
+            <td style="color:var(--text-muted); font-size:0.8rem">${emp.HireDate || '—'}</td>
+          </tr>
+        `).join('');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Modals
+  function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
+  function closeCreateModal() { document.getElementById('createModal').classList.remove('open'); }
+
+  async function submitCreateEmployee() {
+    const firstName = document.getElementById('createFirstName').value.trim();
+    const lastName = document.getElementById('createLastName').value.trim();
+    const deptId = parseInt(document.getElementById('createDept').value, 10);
+    const salary = parseFloat(document.getElementById('createSalary').value);
+    const bonusInput = document.getElementById('createBonus').value;
+    const bonus = bonusInput !== '' ? parseFloat(bonusInput) : null;
+
+    if (!firstName || !lastName || !salary) {
+      alert('Please fill in required fields (First Name, Last Name, Salary).');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          FirstName: firstName,
+          LastName: lastName,
+          DepartmentID: deptId,
+          Salary: salary,
+          Bonus: bonus
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Employee created successfully!');
+        closeCreateModal();
+        // Reset form
+        document.getElementById('createFirstName').value = '';
+        document.getElementById('createLastName').value = '';
+        document.getElementById('createSalary').value = '';
+        document.getElementById('createBonus').value = '';
+        loadEmployees();
+        loadReports();
+      } else {
+        alert(data.error || 'Failed to create employee');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error creating employee.');
+    }
+  }
+
+  function openEditModal(id, name, currentBonus) {
+    document.getElementById('editEmployeeId').value = id;
+    document.getElementById('editEmployeeSubtitle').textContent = `Updating record for ${name}`;
+    document.getElementById('editBonusAmount').value = currentBonus !== null && currentBonus !== undefined ? currentBonus : '';
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+  async function submitUpdateBonus() {
+    const id = document.getElementById('editEmployeeId').value;
+    const bonusInput = document.getElementById('editBonusAmount').value;
+    const bonus = bonusInput !== '' ? parseFloat(bonusInput) : null;
+
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Bonus: bonus })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Bonus updated successfully!');
+        closeEditModal();
+        loadEmployees();
+        loadReports();
+      } else {
+        alert(data.error || 'Failed to update bonus');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error updating bonus.');
+    }
+  }
+
+  async function deleteEmployee(id, name) {
+    if (!confirm(`Are you sure you want to delete ${name} (#${id})?`)) return;
+
+    try {
+      const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Employee ${name} deleted.`);
+        loadEmployees();
+        loadReports();
+      } else {
+        alert(data.error || 'Failed to delete employee.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error deleting employee.');
+    }
+  }
+
+  // Initial load
+  loadEmployees();
+  loadReports();
+</script>
+</body>
+</html>

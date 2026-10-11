@@ -1,0 +1,23 @@
+{
+  "name": "employee-compensation-service",
+  "version": "1.0.0",
+  "description": "Azure Functions service for Employee Compensation and Bonus Analytics",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prestart": "npm run build",
+    "start": "func start",
+    "dev": "npm run build && node dist/src/devServer.js",
+    "test": "npm run build && node dist/tests/test-runner.js"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.0",
+    "@types/sqlite3": "^3.1.11",
+    "typescript": "^5.6.3"
+  }
+}
